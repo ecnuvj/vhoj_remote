@@ -1,0 +1,21 @@
+package com.vjudge.ecnuvj.remote.provider.spoj;
+
+import com.vjudge.ecnuvj.remote.common.RemoteOj;
+import com.vjudge.ecnuvj.remote.common.RemoteOjInfo;
+import org.apache.http.HttpHost;
+
+public class SPOJInfo {
+
+    public static final RemoteOjInfo INFO = new RemoteOjInfo( //
+            RemoteOj.SPOJ, //
+            "SPOJ", //
+            HttpHost.create("https://www.spoj.com")//
+    );
+
+    static {
+        INFO.defaultChaset = "ISO-8859-1";
+        INFO.faviconUrl = "images/remote_oj/SPOJ_favicon.png";
+        INFO._64IntIoFormat = "%lld & %llu";
+    }
+
+}

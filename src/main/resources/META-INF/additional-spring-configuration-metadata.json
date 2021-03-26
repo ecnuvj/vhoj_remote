@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "remote.accounts.path",
+      "type": "java.lang.String",
+      "description": "Description for remote.accounts.path."
+    }
+  ]
+}

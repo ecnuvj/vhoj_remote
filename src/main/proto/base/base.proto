@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option go_package = "github.com/ecnuvj/vhoj_rpc/model/base";
+option java_package = "com.vjudge.ecnuvj.rpc.base";
+package base;
+
+enum REPLY_STATUS {
+  UNKNOWN = 0;
+  SUCCESS = 1;
+  FAILURE = 2;
+}
+
+message BaseResponse {
+  REPLY_STATUS status = 1;
+  string message = 2;
+}
