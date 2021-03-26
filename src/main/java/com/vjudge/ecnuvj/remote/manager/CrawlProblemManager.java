@@ -4,6 +4,7 @@ import com.vjudge.ecnuvj.bean.Description;
 import com.vjudge.ecnuvj.bean.Problem;
 import com.vjudge.ecnuvj.executor.ExecutorTaskType;
 import com.vjudge.ecnuvj.executor.Task;
+import com.vjudge.ecnuvj.mapper.RawProblemMapper;
 import com.vjudge.ecnuvj.remote.common.RemoteOj;
 import com.vjudge.ecnuvj.remote.crawler.Crawler;
 import com.vjudge.ecnuvj.remote.crawler.CrawlersHolder;
@@ -14,6 +15,7 @@ import com.vjudge.ecnuvj.tool.HtmlHandleUtil;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -27,7 +29,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class CrawlProblemManager {
     private final static Logger log = LoggerFactory.getLogger(CrawlProblemManager.class);
 
-    private ConcurrentHashMap<String, Date> triggerCache = new ConcurrentHashMap<String, Date>();
+    @Autowired
+    RawProblemMapper rawProblemMapper;
+
+    private final ConcurrentHashMap<String, Date> triggerCache = new ConcurrentHashMap<String, Date>();
 
     public void crawlProblem(String remoteOj, String remoteProblemId, boolean enforce) {
         if (remoteOj == null || remoteProblemId == null || remoteProblemId.length() > 36) {
