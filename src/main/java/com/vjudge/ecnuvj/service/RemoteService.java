@@ -1,6 +1,7 @@
 package com.vjudge.ecnuvj.service;
 
 import com.vjudge.ecnuvj.bean.Submission;
+import com.vjudge.ecnuvj.remote.common.RemoteOj;
 import com.vjudge.ecnuvj.remote.manager.CrawlProblemManager;
 import com.vjudge.ecnuvj.remote.manager.LanguageManager;
 import com.vjudge.ecnuvj.remote.manager.SubmitCodeManager;
@@ -31,13 +32,15 @@ public class RemoteService extends RemoteServiceGrpc.RemoteServiceImplBase {
     @Autowired
     LanguageManager languageManager;
 
+    @Autowired
+    SubmissionService submissionService;
+
     @Override
     public void submitCode(SubmitCodeRequest request, StreamObserver<SubmitCodeResponse> responseObserver) {
         SubmitCodeResponse res = SubmitCodeResponse.newBuilder().build();
         try {
             Map<String, String> languageMap = languageManager.getLanguages(request.getRemoteOj(), request.getRemoteProblemId());
             Map<Integer, String> languageConverter = languageManager.getLanguagesConverter(request.getRemoteOj());
-            //String source = new String(Base64.decodeBase64(request.getSourceCode()), "utf-8");
             String language = languageConverter.get(request.getLanguage());
             if (!languageMap.containsKey(language)) {
                 throw new Exception("no such language");
@@ -49,13 +52,16 @@ public class RemoteService extends RemoteServiceGrpc.RemoteServiceImplBase {
             submission.setLanguage(language);
             submission.setSource(request.getSourceCode());
             submission.setDispLanguage(languageMap.get(language));
+            submission.setLangCode(request.getLanguage());
             submission.setUsername(request.getUsername());
             submission.setOriginOJ(request.getRemoteOj());
             submission.setUserId(request.getUserId());
             submission.setOriginProb(request.getRemoteProblemId());
             submission.setLanguageCanonical(Tools.getCanonicalLanguage(submission.getDispLanguage()).toString());
-            submission.setId(1);
-            System.out.println(submission.getStatus());
+            submission.setContestId(request.getContestId());
+            Long id = submissionService.addOrModifySubmission(submission);
+            submission.setId(id.intValue());
+            //System.out.println(submission.getStatus());
             submitCodeManager.submitCode(submission);
             res = SubmitCodeResponse.newBuilder().setBaseResponse(
                     Base.BaseResponse.newBuilder().setStatus(Base.REPLY_STATUS.SUCCESS).setMessage("submit success").build()
@@ -75,7 +81,8 @@ public class RemoteService extends RemoteServiceGrpc.RemoteServiceImplBase {
     public void crawlProblem(CrawlProblemRequest request, StreamObserver<CrawlProblemResponse> responseObserver) {
         CrawlProblemResponse res = CrawlProblemResponse.newBuilder().build();
         try {
-            crawlProblemManager.crawlProblem(request.getRemoteOj(), request.getRemoteProblemId(), request.getEnforce());
+            String remoteOj = request.getRemoteOj().trim();
+            crawlProblemManager.crawlProblem(RemoteOj.valueOf(remoteOj), request.getRemoteProblemId(), request.getEnforce());
             res = CrawlProblemResponse.newBuilder().setBaseResponse(
                     Base.BaseResponse.newBuilder().setStatus(Base.REPLY_STATUS.SUCCESS).build()
             ).build();

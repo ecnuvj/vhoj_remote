@@ -1,7 +1,6 @@
 package com.vjudge.ecnuvj.remote.manager;
 
-import com.vjudge.ecnuvj.bean.Description;
-import com.vjudge.ecnuvj.bean.Problem;
+import com.vjudge.ecnuvj.entity.RawProblem;
 import com.vjudge.ecnuvj.executor.ExecutorTaskType;
 import com.vjudge.ecnuvj.executor.Task;
 import com.vjudge.ecnuvj.mapper.RawProblemMapper;
@@ -34,41 +33,41 @@ public class CrawlProblemManager {
 
     private final ConcurrentHashMap<String, Date> triggerCache = new ConcurrentHashMap<String, Date>();
 
-    public void crawlProblem(String remoteOj, String remoteProblemId, boolean enforce) {
+    public void crawlProblem(RemoteOj remoteOj, String remoteProblemId, boolean enforce) {
         if (remoteOj == null || remoteProblemId == null || remoteProblemId.length() > 36) {
             log.error("Illegal remoteOJ or remoteProblemId");
             return;
         }
-        remoteOj = remoteOj.trim();
+        int remoteOjCode = remoteOj.getCode();
         remoteProblemId = remoteProblemId.trim();
 
-        Problem problem = null;
-        //judgeService.findProblem(remoteOj, remoteProblemId);
+        RawProblem problem = rawProblemMapper.findRawProblemByRemoteOjAndRemoteId(remoteOjCode, remoteProblemId);
         if (problem == null) {
-            problem = new Problem();
-            problem.setOriginOJ(remoteOj);
-            problem.setOriginProb(remoteProblemId);
-            problem.setTriggerTime(triggerCache.get(remoteOj + remoteProblemId));
+            problem = new RawProblem();
+            problem.setRemoteOj(remoteOjCode);
+            problem.setRemoteProblemId(remoteProblemId);
+            problem.setCreatedAt(new Date());
+            problem.setUpdatedAt(triggerCache.get(remoteOj + remoteProblemId));
             problem.setTitle("N/A");
         }
         crawlProblem(problem, enforce);
     }
 
-    public void crawlProblem(Problem problem, boolean enforce) {
+    public void crawlProblem(RawProblem problem, boolean enforce) {
         long sinceTriggerTime = Long.MAX_VALUE;
-        if (problem.getTriggerTime() != null) {
-            sinceTriggerTime = System.currentTimeMillis() - problem.getTriggerTime().getTime();
+        if (problem.getUpdatedAt() != null) {
+            sinceTriggerTime = System.currentTimeMillis() - problem.getUpdatedAt().getTime();
         }
         boolean condition1 = sinceTriggerTime > 7L * 86400L * 1000L;
-        boolean condition2 = problem.getTimeLimit() == 2 && sinceTriggerTime > 600L * 1000L;
-        boolean condition3 = enforce && (problem.getTimeLimit() != 1 || sinceTriggerTime > 3600L * 1000L);
+        boolean condition2 = problem.getTimeLimit() != null && problem.getTimeLimit().equals("2") && sinceTriggerTime > 600L * 1000L;
+        boolean condition3 = enforce && (problem.getTimeLimit() != null && !problem.getTimeLimit().equals("1") || sinceTriggerTime > 3600L * 1000L);
         if (condition1 || condition2 || condition3) {
-            problem.setTimeLimit(1);
-            problem.setTriggerTime(new Date());
-            //baseService.addOrModify(problem);
+            problem.setTimeLimit("1");
+            problem.setUpdatedAt(new Date());
+            rawProblemMapper.addOrModifyRawProblem(problem);
             new CrawlProblemTask(problem).submit();
 
-            triggerCache.put(problem.getOriginOJ() + problem.getOriginProb(), new Date());
+            triggerCache.put(problem.getRemoteOj() + problem.getRemoteProblemId(), new Date());
             if (triggerCache.size() > 1000) {
                 triggerCache.clear();
             }
@@ -79,9 +78,9 @@ public class CrawlProblemManager {
 
         protected static final boolean SAVE_IMG_TO_VJ_SERVER = true;
 
-        private Problem problem;
+        private RawProblem problem;
 
-        public CrawlProblemTask(Problem problem) {
+        public CrawlProblemTask(RawProblem problem) {
             super(ExecutorTaskType.UPDATE_PROBLEM_INFO);
             this.problem = problem;
         }
@@ -90,39 +89,36 @@ public class CrawlProblemManager {
         public Void call() throws Exception {
             Crawler crawler = null;
             try {
-                crawler = CrawlersHolder.getCrawler(RemoteOj.valueOf(problem.getOriginOJ()));
+                crawler = CrawlersHolder.getCrawler(RemoteOj.codeValueOf(problem.getRemoteOj()));
                 Validate.notNull(crawler);
             } catch (Throwable t) {
                 _onError(t);
                 return null;
             }
-            crawler.crawl(problem.getOriginProb(), new Handler<RawProblemInfo>() {
+            crawler.crawl(problem.getRemoteProblemId(), new Handler<RawProblemInfo>() {
 
                 @Override
                 public void handle(RawProblemInfo info) {
                     problem.setTitle(info.title);
-                    problem.setTimeLimit(info.timeLimit);
-                    problem.setMemoryLimit(info.memoryLimit);
+                    problem.setTimeLimit("" + info.timeLimit);
+                    problem.setMemoryLimit("" + info.memoryLimit);
                     problem.setSource(info.source);
-                    problem.setUrl(info.url);
 
-                    Description description = getSystemDescription();
                     if (SAVE_IMG_TO_VJ_SERVER) {
-                        description.setDescription(HtmlHandleUtil.transformImgUrlToLocal(info.description));
-                        description.setInput(HtmlHandleUtil.transformImgUrlToLocal(info.input));
-                        description.setOutput(HtmlHandleUtil.transformImgUrlToLocal(info.output));
-                        description.setHint(HtmlHandleUtil.transformImgUrlToLocal(info.hint));
+                        problem.setDescription(HtmlHandleUtil.transformImgUrlToLocal(info.description));
+                        problem.setInput(HtmlHandleUtil.transformImgUrlToLocal(info.input));
+                        problem.setOutput(HtmlHandleUtil.transformImgUrlToLocal(info.output));
+                        problem.setHint(HtmlHandleUtil.transformImgUrlToLocal(info.hint));
                     } else {
-                        description.setDescription(info.description);
-                        description.setInput(info.input);
-                        description.setOutput(info.output);
-                        description.setHint(info.hint);
+                        problem.setDescription(info.description);
+                        problem.setInput(info.input);
+                        problem.setOutput(info.output);
+                        problem.setHint(info.hint);
                     }
-                    description.setSampleInput(info.sampleInput);
-                    description.setSampleOutput(info.sampleOutput);
-                    description.setUpdateTime(new Date());
-                    //baseService.addOrModify(problem);
-                    //baseService.addOrModify(description);
+                    problem.setSampleInput(info.sampleInput);
+                    problem.setSampleOutput(info.sampleOutput);
+                    problem.setUpdatedAt(new Date());
+                    rawProblemMapper.addOrModifyRawProblem(problem);
                     System.out.println(GsonUtil.toJson(info));
                 }
 
@@ -138,31 +134,24 @@ public class CrawlProblemManager {
 
         private void _onError(Throwable t) {
             log.error(t.getMessage(), t);
-            if (problem.getDescriptions() == null || problem.getDescriptions().isEmpty()) {
-                // Never crawled successfully
-                //baseService.delete(problem);
-            } else {
-                problem.setTimeLimit(2);
-                //baseService.addOrModify(problem);
-            }
         }
 
-        private Description getSystemDescription() {
-            if (problem.getDescriptions() != null) {
-                for (Description desc : problem.getDescriptions()) {
-                    if ("0".equals(desc.getAuthor())) {
-                        return desc;
-                    }
-                }
-            }
-            Description description = new Description();
-            description.setAuthor("0");
-            description.setRemarks("Initialization.");
-            description.setVote(0);
-            description.setProblem(problem);
-
-            return description;
-        }
+//        private Description getSystemDescription() {
+//            if (problem.getDescriptions() != null) {
+//                for (Description desc : problem.getDescriptions()) {
+//                    if ("0".equals(desc.getAuthor())) {
+//                        return desc;
+//                    }
+//                }
+//            }
+//            Description description = new Description();
+//            description.setAuthor("0");
+//            description.setRemarks("Initialization.");
+//            description.setVote(0);
+//            description.setProblem(problem);
+//
+//            return description;
+//        }
 
     }
 }

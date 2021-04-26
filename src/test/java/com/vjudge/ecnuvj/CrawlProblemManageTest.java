@@ -1,5 +1,6 @@
 package com.vjudge.ecnuvj;
 
+import com.vjudge.ecnuvj.remote.common.RemoteOj;
 import com.vjudge.ecnuvj.remote.manager.CrawlProblemManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,7 @@ public class CrawlProblemManageTest {
 
     @Test
     void crawlProblem() throws InterruptedException {
-        crawlProblemManager.crawlProblem("HDU", "1000", true);
+        crawlProblemManager.crawlProblem(RemoteOj.valueOf("HDU"), "2000", true);
         Thread.sleep(5000);
     }
 }

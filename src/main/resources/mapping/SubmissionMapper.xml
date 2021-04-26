@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.vjudge.ecnuvj.mapper.SubmissionMapper">
+
+    <insert id="addOrModifySubmission" parameterType="com.vjudge.ecnuvj.entity.Submission" useGeneratedKeys="true"
+            keyProperty="id">
+        insert into submissions(created_at, updated_at, deleted_at, problem_id, user_id, result, time_cost, memory_cost, language, contest_id, real_run_id, remote_oj, username)
+        values (#{createdAt},#{updatedAt},#{deletedAt},#{problemId},#{userId},#{result},#{timeCost},#{memoryCost},#{language},#{contestId},#{realRunId},#{remoteOj},#{username})
+        on duplicate key update
+        updated_at = #{updatedAt},
+        result = #{result},
+        time_cost = #{timeCost},
+        memory_cost = #{memoryCost},
+        real_run_id = #{realRunId}
+    </insert>
+
+    <insert id="addOrModifySubmissionCode" parameterType="com.vjudge.ecnuvj.entity.SubmissionCode"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into submission_codes(created_at, updated_at, deleted_at, submission_id, source_code, code_length)
+        values (#{createdAt},#{updatedAt},#{deletedAt},#{submissionId},#{sourceCode},#{codeLength})
+        on duplicate key update
+        source_code = #{sourceCode},
+        code_length = #{codeLength}
+    </insert>
+
+</mapper>

@@ -43,8 +43,11 @@ public class Submission {
 
     private String languageCanonical;
 
+    //兼容处理
     private long problemId;
     private long userId;
+    private long contestId;
+    private int langCode;
 
 
     public void reset() {

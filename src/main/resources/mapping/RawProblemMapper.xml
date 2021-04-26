@@ -3,10 +3,79 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.vjudge.ecnuvj.mapper.RawProblemMapper">
+
+    <sql id="rawProblemFields">
+        (
+            created_at,
+            updated_at,
+            deleted_at,
+            title,
+            description,
+            sample_input,
+            sample_output,
+            input,
+            output,
+            hint,
+            remote_oj,
+            remote_problem_id,
+            time_limit,
+            memory_limit,
+            spj,
+            std,
+            source
+        )
+    </sql>
+    <sql id="rawProblemFieldsValue">
+        (
+            #{createdAt},
+            #{updatedAt},
+            #{deletedAt},
+            #{title},
+            #{description},
+            #{sampleInput},
+            #{sampleOutput},
+            #{input},
+            #{output},
+            #{hint},
+            #{remoteOj},
+            #{remoteProblemId},
+            #{timeLimit},
+            #{memoryLimit},
+            #{spj},
+            #{std},
+            #{source}
+        )
+    </sql>
+    <sql id="rawProblemOnDuplicateUpdate">
+        updated_at = #{updatedAt},
+        title = #{title},
+        description = #{description},
+        sample_input = #{sampleInput},
+        sample_output = #{sampleOutput},
+        input = #{input},
+        output = #{output},
+        hint = #{hint},
+        time_limit = #{timeLimit},
+        memory_limit = #{memoryLimit},
+        spj = #{spj},
+        std = #{std},
+        source = #{source}
+    </sql>
     <select id="findRawProblemByRemoteOjAndRemoteId" resultType="RawProblem">
-        select * from raw_problems
-            where remote_oj = #{remoteOj}
-            and remote_problem_id = #{remoteProblemId}
+        select *
+        from raw_problems
+        where remote_oj = #{remoteOj}
+          and remote_problem_id = #{remoteProblemId}
     </select>
+
+    <insert id="addOrModifyRawProblem" parameterType="RawProblem" useGeneratedKeys="true"
+            keyProperty="id">
+        insert into raw_problems
+        <include refid="rawProblemFields"/>
+        value
+        <include refid="rawProblemFieldsValue"/>
+        on duplicate key update
+        <include refid="rawProblemOnDuplicateUpdate"/>
+    </insert>
 
 </mapper>
