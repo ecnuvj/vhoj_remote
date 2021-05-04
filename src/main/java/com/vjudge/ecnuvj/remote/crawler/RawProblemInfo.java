@@ -22,4 +22,5 @@ public class RawProblemInfo {
 
     public String url;            //题面原始url
 
+    public String remoteSubmitId; //提交题目需要的id
 }

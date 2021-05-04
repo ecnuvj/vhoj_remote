@@ -18,6 +18,7 @@
             hint,
             remote_oj,
             remote_problem_id,
+            remote_submit_id,
             time_limit,
             memory_limit,
             spj,
@@ -39,6 +40,7 @@
             #{hint},
             #{remoteOj},
             #{remoteProblemId},
+            #{remoteSubmitId},
             #{timeLimit},
             #{memoryLimit},
             #{spj},
@@ -48,6 +50,7 @@
     </sql>
     <sql id="rawProblemOnDuplicateUpdate">
         updated_at = #{updatedAt},
+        deleted_at = #{deletedAt},
         title = #{title},
         description = #{description},
         sample_input = #{sampleInput},
@@ -59,7 +62,8 @@
         memory_limit = #{memoryLimit},
         spj = #{spj},
         std = #{std},
-        source = #{source}
+        source = #{source},
+        remote_submit_id = #{remoteSubmitId}
     </sql>
     <select id="findRawProblemByRemoteOjAndRemoteId" resultType="RawProblem">
         select *
@@ -68,14 +72,19 @@
           and remote_problem_id = #{remoteProblemId}
     </select>
 
-    <insert id="addOrModifyRawProblem" parameterType="RawProblem" useGeneratedKeys="true"
+    <insert id="addRawProblem" parameterType="RawProblem" useGeneratedKeys="true"
             keyProperty="id">
         insert into raw_problems
         <include refid="rawProblemFields"/>
         value
         <include refid="rawProblemFieldsValue"/>
-        on duplicate key update
-        <include refid="rawProblemOnDuplicateUpdate"/>
     </insert>
+
+    <update id="updateRawProblem" parameterType="RawProblem">
+        update raw_problems
+        set
+        <include refid="rawProblemOnDuplicateUpdate"/>
+        where id = #{id}
+    </update>
 
 </mapper>

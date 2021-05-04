@@ -57,6 +57,9 @@ public class JSKLanguageFinder implements LanguageFinder {
 
     @Override
     public HashMap<Integer, String> getLanguagesConverter() {
-        return null;
+        HashMap<Integer, String> converter = new HashMap<>(2);
+        converter.put(1, "c++");
+        converter.put(2, "java");
+        return converter;
     }
 }

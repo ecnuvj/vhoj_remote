@@ -6,8 +6,8 @@ import java.util.Map;
 
 /**
  * @author 14861
+ * code和vhoj_common remote_oj保持一致
  */
-
 public enum RemoteOj {
     POJ(1),
     HDU(2),

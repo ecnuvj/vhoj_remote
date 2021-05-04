@@ -10,6 +10,7 @@ import com.vjudge.ecnuvj.remote.submitter.SubmissionInfo;
 import com.vjudge.ecnuvj.remote.submitter.SubmissionReceipt;
 import com.vjudge.ecnuvj.remote.submitter.Submitter;
 import com.vjudge.ecnuvj.remote.submitter.SubmittersHolder;
+import com.vjudge.ecnuvj.service.SubmissionService;
 import com.vjudge.ecnuvj.tool.Handler;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -26,6 +27,9 @@ public class SubmitCodeManager {
 
     @Autowired
     private RunningSubmissions runningSubmissions;
+
+    @Autowired
+    private SubmissionService submissionService;
 
 
     public void submitCode(Submission submission) {
@@ -97,6 +101,7 @@ public class SubmitCodeManager {
                         log.info("Submit Finished: " + runningSubmissions.getLogKey(submission));
                     }
                     //baseService.addOrModify(submission);
+                    submissionService.addOrModifySubmission(submission);
                     System.out.println(submission.getStatus());
                     runningSubmissions.remove(submission.getId());
 
@@ -112,6 +117,7 @@ public class SubmitCodeManager {
             submission.setStatus("Submit Failed");
             submission.setStatusCanonical(RemoteStatusType.SUBMIT_FAILED_TEMP.name());
             //baseService.addOrModify(submission);
+            submissionService.addOrModifySubmission(submission);
         }
     }
 

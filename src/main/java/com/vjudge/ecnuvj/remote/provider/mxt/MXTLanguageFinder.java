@@ -66,7 +66,10 @@ public class MXTLanguageFinder implements LanguageFinder {
 
     @Override
     public HashMap<Integer, String> getLanguagesConverter() {
-        return null;
+        HashMap<Integer, String> converter = new HashMap<>(2);
+        converter.put(1, "1");
+        converter.put(2, "3");
+        return converter;
     }
 }
 

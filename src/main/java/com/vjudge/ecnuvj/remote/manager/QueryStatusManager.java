@@ -11,6 +11,7 @@ import com.vjudge.ecnuvj.remote.querier.QueriersHolder;
 import com.vjudge.ecnuvj.remote.status.RemoteStatusType;
 import com.vjudge.ecnuvj.remote.status.SubmissionRemoteStatus;
 import com.vjudge.ecnuvj.remote.submitter.SubmissionInfo;
+import com.vjudge.ecnuvj.service.SubmissionService;
 import com.vjudge.ecnuvj.tool.Handler;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -42,6 +43,9 @@ public class QueryStatusManager {
 
     @Autowired
     private RemoteStatusUpdateEvent updateEvent;
+
+    @Autowired
+    private SubmissionService submissionService;
 
     // 查询管理器的调用必然基于用户的初步提交
     public void createQuery(final Submission submission) {
@@ -145,6 +149,7 @@ public class QueryStatusManager {
             log.info(String.format("Stop query: %s", runningSubmissions.getLogKey(submission)));
             if (runningSubmissions.remove(submission.getId()) != null) {
                 //baseService.addOrModify(submission);
+                submissionService.addOrModifySubmission(submission);
                 System.out.println(submission.getStatus());
             }
             updateEvent.fireStatusUpdate(submission);

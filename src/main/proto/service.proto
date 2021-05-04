@@ -7,30 +7,32 @@ option go_package = "github.com/ecnuvj/vhoj_rpc/model/remotepb";
 import "base/base.proto";
 
 service RemoteService {
-    rpc SubmitCode (SubmitCodeRequest) returns (SubmitCodeResponse) {};
-    rpc CrawlProblem (CrawlProblemRequest) returns (CrawlProblemResponse) {};
+  rpc SubmitCode (SubmitCodeRequest) returns (SubmitCodeResponse) {};
+  rpc CrawlProblem (CrawlProblemRequest) returns (CrawlProblemResponse) {};
 }
 
 message SubmitCodeRequest {
-    uint64 user_id = 1;
-    string username = 2;
-    string remote_oj = 3;
-    string remote_problem_id = 4;
-    int32 language = 5;
-    string source_code = 6;
-    uint64 contest_id = 7;
+  uint64 user_id = 1;
+  string username = 2;
+  int32 remote_oj = 3;
+  string remote_problem_id = 4;
+  int32 language = 5;
+  string source_code = 6;
+  uint64 contest_id = 7;
+  uint64  problem_id = 8;
 }
 
 message SubmitCodeResponse {
-    base.BaseResponse base_response = 1;
+  uint64 submission_id = 1;
+  base.BaseResponse base_response = 2;
 }
 
 message CrawlProblemRequest {
-    string remote_oj = 1;
-    string remote_problem_id = 2;
-    bool enforce = 3;
+  int32 remote_oj = 1;
+  string remote_problem_id = 2;
+  bool enforce = 3;
 }
 
 message CrawlProblemResponse {
-   base.BaseResponse base_response = 1;
+  base.BaseResponse base_response = 1;
 }

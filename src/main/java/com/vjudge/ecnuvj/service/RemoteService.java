@@ -39,8 +39,11 @@ public class RemoteService extends RemoteServiceGrpc.RemoteServiceImplBase {
     public void submitCode(SubmitCodeRequest request, StreamObserver<SubmitCodeResponse> responseObserver) {
         SubmitCodeResponse res = SubmitCodeResponse.newBuilder().build();
         try {
-            Map<String, String> languageMap = languageManager.getLanguages(request.getRemoteOj(), request.getRemoteProblemId());
-            Map<Integer, String> languageConverter = languageManager.getLanguagesConverter(request.getRemoteOj());
+            RemoteOj remoteOj = RemoteOj.codeValueOf(request.getRemoteOj());
+            //remote oj lang id (str) -> lang name ("1" -> "C++")
+            Map<String, String> languageMap = languageManager.getLanguages(remoteOj.name(), request.getRemoteProblemId());
+            //统一语言编码 -> remote oj lang id (str)
+            Map<Integer, String> languageConverter = languageManager.getLanguagesConverter(remoteOj.name());
             String language = languageConverter.get(request.getLanguage());
             if (!languageMap.containsKey(language)) {
                 throw new Exception("no such language");
@@ -50,12 +53,13 @@ public class RemoteService extends RemoteServiceGrpc.RemoteServiceImplBase {
             submission.setStatus("Pending");
             submission.setStatusCanonical(RemoteStatusType.PENDING.name());
             submission.setLanguage(language);
-            submission.setSource(request.getSourceCode());
             submission.setDispLanguage(languageMap.get(language));
+            submission.setSource(request.getSourceCode());
             submission.setLangCode(request.getLanguage());
             submission.setUsername(request.getUsername());
-            submission.setOriginOJ(request.getRemoteOj());
+            submission.setOriginOJ(remoteOj.name());
             submission.setUserId(request.getUserId());
+            submission.setProblemId(request.getProblemId());
             submission.setOriginProb(request.getRemoteProblemId());
             submission.setLanguageCanonical(Tools.getCanonicalLanguage(submission.getDispLanguage()).toString());
             submission.setContestId(request.getContestId());
@@ -65,7 +69,7 @@ public class RemoteService extends RemoteServiceGrpc.RemoteServiceImplBase {
             submitCodeManager.submitCode(submission);
             res = SubmitCodeResponse.newBuilder().setBaseResponse(
                     Base.BaseResponse.newBuilder().setStatus(Base.REPLY_STATUS.SUCCESS).setMessage("submit success").build()
-            ).build();
+            ).setSubmissionId(id).build();
         } catch (Exception e) {
             res = SubmitCodeResponse.newBuilder().setBaseResponse(
                     Base.BaseResponse.newBuilder().setStatus(Base.REPLY_STATUS.FAILURE).setMessage(e.toString()).build()
@@ -81,10 +85,10 @@ public class RemoteService extends RemoteServiceGrpc.RemoteServiceImplBase {
     public void crawlProblem(CrawlProblemRequest request, StreamObserver<CrawlProblemResponse> responseObserver) {
         CrawlProblemResponse res = CrawlProblemResponse.newBuilder().build();
         try {
-            String remoteOj = request.getRemoteOj().trim();
-            crawlProblemManager.crawlProblem(RemoteOj.valueOf(remoteOj), request.getRemoteProblemId(), request.getEnforce());
+            RemoteOj remoteOj = RemoteOj.codeValueOf(request.getRemoteOj());
+            crawlProblemManager.crawlProblem(remoteOj, request.getRemoteProblemId(), request.getEnforce());
             res = CrawlProblemResponse.newBuilder().setBaseResponse(
-                    Base.BaseResponse.newBuilder().setStatus(Base.REPLY_STATUS.SUCCESS).build()
+                    Base.BaseResponse.newBuilder().setStatus(Base.REPLY_STATUS.SUCCESS).setMessage("crawl success").build()
             ).build();
         } catch (Exception e) {
             res = CrawlProblemResponse.newBuilder().setBaseResponse(

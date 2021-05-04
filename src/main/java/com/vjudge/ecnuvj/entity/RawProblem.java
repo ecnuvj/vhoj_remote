@@ -23,6 +23,7 @@ public class RawProblem {
     private String hint;
     private int remoteOj;
     private String remoteProblemId;
+    private String remoteSubmitId;
     private String timeLimit;
     private String memoryLimit;
     private String spj;

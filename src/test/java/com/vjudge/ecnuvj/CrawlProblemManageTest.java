@@ -17,7 +17,7 @@ public class CrawlProblemManageTest {
 
     @Test
     void crawlProblem() throws InterruptedException {
-        crawlProblemManager.crawlProblem(RemoteOj.valueOf("HDU"), "2000", true);
+        crawlProblemManager.crawlProblem(RemoteOj.valueOf("HDU"), "2001", true);
         Thread.sleep(5000);
     }
 }

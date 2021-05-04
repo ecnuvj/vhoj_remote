@@ -29,7 +29,7 @@ public class JSKCrawler extends SimpleCrawler {
 
     @Override
     protected void preValidate(String problemId) {
-        Validate.isTrue(problemId.matches("[1-9]\\d*"));
+        Validate.isTrue(problemId.matches("[A|T][1-9]\\d*"));
     }
 
     @Override
@@ -45,5 +45,7 @@ public class JSKCrawler extends SimpleCrawler {
         info.sampleOutput = gsonUtil.getStrMem("sample_output");
         info.hint = gsonUtil.getStrMem("hint");
         info.source = gsonUtil.getStrMem("source");
+        info.remoteSubmitId = Tools.regFind(html, "wenda.jisuanke.com/nanti/(\\d*)");
+        System.out.println("jsk=========" + info.remoteSubmitId);
     }
 }
