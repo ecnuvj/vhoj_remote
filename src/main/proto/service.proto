@@ -9,8 +9,17 @@ import "base/base.proto";
 service RemoteService {
   rpc SubmitCode (SubmitCodeRequest) returns (SubmitCodeResponse) {};
   rpc CrawlProblem (CrawlProblemRequest) returns (CrawlProblemResponse) {};
+  rpc QueryCrawlResult (QueryCrawlResultRequest) returns(QueryCrawlResultResponse) {};
 }
 
+message QueryCrawlResultRequest{
+  uint64 raw_id = 1;
+}
+
+message QueryCrawlResultResponse {
+  int32 status = 1;
+  base.BaseResponse base_response = 2;
+}
 message SubmitCodeRequest {
   uint64 user_id = 1;
   string username = 2;
@@ -34,5 +43,6 @@ message CrawlProblemRequest {
 }
 
 message CrawlProblemResponse {
-  base.BaseResponse base_response = 1;
+  uint64 raw_problem_id = 1;
+  base.BaseResponse base_response = 2;
 }

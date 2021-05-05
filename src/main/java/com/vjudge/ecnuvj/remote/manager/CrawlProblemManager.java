@@ -37,10 +37,10 @@ public class CrawlProblemManager {
 
     private final ConcurrentHashMap<String, Date> triggerCache = new ConcurrentHashMap<String, Date>();
 
-    public void crawlProblem(RemoteOj remoteOj, String remoteProblemId, boolean enforce) {
+    public Long crawlProblem(RemoteOj remoteOj, String remoteProblemId, boolean enforce) {
         if (remoteOj == null || remoteProblemId == null || remoteProblemId.length() > 36) {
             log.error("Illegal remoteOJ or remoteProblemId");
-            return;
+            return null;
         }
         int remoteOjCode = remoteOj.getCode();
         remoteProblemId = remoteProblemId.trim();
@@ -49,10 +49,10 @@ public class CrawlProblemManager {
         problem.setRemoteOj(remoteOjCode);
         problem.setRemoteProblemId(remoteProblemId);
 
-        crawlProblem(problem, enforce);
+        return crawlProblem(problem, enforce);
     }
 
-    public void crawlProblem(RawProblem problem, boolean enforce) {
+    public Long crawlProblem(RawProblem problem, boolean enforce) {
         long sinceTriggerTime = Long.MAX_VALUE;
         if (problem.getUpdatedAt() != null) {
             sinceTriggerTime = System.currentTimeMillis() - problem.getUpdatedAt().getTime();
@@ -66,6 +66,10 @@ public class CrawlProblemManager {
             if (triggerCache.size() > 1000) {
                 triggerCache.clear();
             }
+            return problem.getId();
+        } else {
+            RawProblem tmp = rawProblemMapper.findRawProblemByRemoteOjAndRemoteId(problem.getRemoteOj(), problem.getRemoteProblemId());
+            return tmp.getId();
         }
     }
 

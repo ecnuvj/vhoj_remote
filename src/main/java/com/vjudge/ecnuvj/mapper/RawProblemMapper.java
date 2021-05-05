@@ -63,4 +63,10 @@ public interface RawProblemMapper {
 
     @Select("select * from problems where raw_problem_id = #{rawId}")
     Problem findProblemByRawId(@Param("rawId") Long rawId);
+
+    @Select("select * from problems where group_id = #{groupId}")
+    Problem findProblemByGroupId(@Param("groupId") Long groupId);
+
+    @Select("select * from raw_problems where id = #{rawId}")
+    RawProblem findRawById(@Param("rawId") Long rawId);
 }

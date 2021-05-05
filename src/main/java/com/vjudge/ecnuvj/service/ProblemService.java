@@ -47,7 +47,7 @@ public class ProblemService {
                     problemGroup.setRemoteProblemId(rawProblem.getRemoteSubmitId());
                     rawProblemMapper.addProblemGroup(problemGroup);
                 }
-                Problem problem = rawProblemMapper.findProblemByRawId(rawProblem.getId());
+                Problem problem = rawProblemMapper.findProblemByGroupId(problemGroup.getGroupId());
                 if (problem == null) {
                     problem = new Problem();
                     problem.setCreatedAt(new Date());

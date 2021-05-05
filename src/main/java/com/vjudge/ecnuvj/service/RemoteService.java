@@ -1,6 +1,8 @@
 package com.vjudge.ecnuvj.service;
 
 import com.vjudge.ecnuvj.bean.Submission;
+import com.vjudge.ecnuvj.entity.RawProblem;
+import com.vjudge.ecnuvj.mapper.RawProblemMapper;
 import com.vjudge.ecnuvj.remote.common.RemoteOj;
 import com.vjudge.ecnuvj.remote.manager.CrawlProblemManager;
 import com.vjudge.ecnuvj.remote.manager.LanguageManager;
@@ -34,6 +36,9 @@ public class RemoteService extends RemoteServiceGrpc.RemoteServiceImplBase {
 
     @Autowired
     SubmissionService submissionService;
+
+    @Autowired
+    RawProblemMapper rawProblemMapper;
 
     @Override
     public void submitCode(SubmitCodeRequest request, StreamObserver<SubmitCodeResponse> responseObserver) {
@@ -86,12 +91,46 @@ public class RemoteService extends RemoteServiceGrpc.RemoteServiceImplBase {
         CrawlProblemResponse res = CrawlProblemResponse.newBuilder().build();
         try {
             RemoteOj remoteOj = RemoteOj.codeValueOf(request.getRemoteOj());
-            crawlProblemManager.crawlProblem(remoteOj, request.getRemoteProblemId(), request.getEnforce());
+            Long rawId = crawlProblemManager.crawlProblem(remoteOj, request.getRemoteProblemId(), request.getEnforce());
             res = CrawlProblemResponse.newBuilder().setBaseResponse(
                     Base.BaseResponse.newBuilder().setStatus(Base.REPLY_STATUS.SUCCESS).setMessage("crawl success").build()
-            ).build();
+            ).setRawProblemId(rawId).build();
         } catch (Exception e) {
             res = CrawlProblemResponse.newBuilder().setBaseResponse(
+                    Base.BaseResponse.newBuilder().setStatus(Base.REPLY_STATUS.FAILURE).setMessage(e.getMessage()).build()
+            ).build();
+        } finally {
+            responseObserver.onNext(res);
+            responseObserver.onCompleted();
+        }
+    }
+
+    /**
+     * status 1:爬取中 2:完成 3:失败
+     *
+     * @param request
+     * @param responseObserver
+     */
+    @Override
+    public void queryCrawlResult(QueryCrawlResultRequest request, StreamObserver<QueryCrawlResultResponse> responseObserver) {
+        QueryCrawlResultResponse res = QueryCrawlResultResponse.newBuilder().build();
+        try {
+            RawProblem problem = rawProblemMapper.findRawById(request.getRawId());
+            if (problem.getDeletedAt() != null) {
+                res = QueryCrawlResultResponse.newBuilder().setStatus(3).setBaseResponse(
+                        Base.BaseResponse.newBuilder().setStatus(Base.REPLY_STATUS.SUCCESS).setMessage("crawl failed").build()
+                ).build();
+            } else if (problem.getTitle() != null && !"".equals(problem.getTitle())) {
+                res = QueryCrawlResultResponse.newBuilder().setStatus(2).setBaseResponse(
+                        Base.BaseResponse.newBuilder().setStatus(Base.REPLY_STATUS.SUCCESS).setMessage("crawl success").build()
+                ).build();
+            } else {
+                res = QueryCrawlResultResponse.newBuilder().setStatus(1).setBaseResponse(
+                        Base.BaseResponse.newBuilder().setStatus(Base.REPLY_STATUS.SUCCESS).setMessage("crawling").build()
+                ).build();
+            }
+        } catch (Exception e) {
+            res = QueryCrawlResultResponse.newBuilder().setStatus(0).setBaseResponse(
                     Base.BaseResponse.newBuilder().setStatus(Base.REPLY_STATUS.FAILURE).setMessage(e.getMessage()).build()
             ).build();
         } finally {
