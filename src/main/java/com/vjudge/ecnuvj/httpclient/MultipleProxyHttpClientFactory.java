@@ -1,5 +1,6 @@
 package com.vjudge.ecnuvj.httpclient;
 
+import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
@@ -22,6 +23,8 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HttpContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -31,7 +34,6 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
@@ -53,12 +55,12 @@ public class MultipleProxyHttpClientFactory {
     private List<HttpClient> delegates;
     private Map<String, MultipleProxyHttpClient> instances = new HashMap<String, MultipleProxyHttpClient>();
     private File jsonConfig;
+    private String jsonConfigStr;
 
     @Autowired
-    public MultipleProxyHttpClientFactory(@Value("${http.client.path}") String jsonConfigPath) {
-        // this.jsonConfig = new File(jsonConfigPath);
-        //System.out.println();
-        this.jsonConfig = new File(MultipleProxyHttpClientFactory.class.getResource("/").getPath() + jsonConfigPath);
+    public MultipleProxyHttpClientFactory(@Value("${http.client.path}") String jsonConfigPath) throws IOException {
+        Resource resource = new ClassPathResource(jsonConfigPath);
+        this.jsonConfigStr = new String(ByteStreams.toByteArray(resource.getInputStream()));
     }
 
     private HttpClientBuilder getBaseBuilder(
@@ -150,7 +152,7 @@ public class MultipleProxyHttpClientFactory {
     @PostConstruct
     public void init() throws JsonIOException, JsonSyntaxException, FileNotFoundException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException {
         Map<String, Object> proto = new HashMap<String, Object>();
-        Map<String, Object> httpClientConfigs = new Gson().fromJson(new FileReader(jsonConfig), proto.getClass());
+        Map<String, Object> httpClientConfigs = new Gson().fromJson(jsonConfigStr, proto.getClass());
 
         int socketTimeout = ((Double) httpClientConfigs.get("socket_timeout")).intValue();
         int connectionTimeout = ((Double) httpClientConfigs.get("connection_timeout")).intValue();

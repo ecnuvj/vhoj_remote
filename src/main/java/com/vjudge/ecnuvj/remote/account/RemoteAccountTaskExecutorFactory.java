@@ -1,5 +1,6 @@
 package com.vjudge.ecnuvj.remote.account;
 
+import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
@@ -11,11 +12,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 
@@ -28,16 +31,19 @@ public class RemoteAccountTaskExecutorFactory {
 
     public File jsonConfig;
 
+    public String jsonConfigStr;
+
     @Autowired
-    public RemoteAccountTaskExecutorFactory(@Value("${remote.accounts.path}") String jsonConfigPath) {
-        this.jsonConfig = new File(RemoteAccountTaskExecutorFactory.class.getResource("/").getPath() + jsonConfigPath);
+    public RemoteAccountTaskExecutorFactory(@Value("${remote.accounts.path}") String jsonConfigPath) throws IOException {
+        Resource resource = new ClassPathResource(jsonConfigPath);
+        this.jsonConfigStr = new String(ByteStreams.toByteArray(resource.getInputStream()));
     }
 
     @Bean(initMethod = "init")
     public RemoteAccountTaskExecutor create() throws JsonSyntaxException, JsonIOException, FileNotFoundException {
         Type type = new TypeToken<HashMap<RemoteOj, RemoteAccountOJConfig>>() {
         }.getType();
-        HashMap<RemoteOj, RemoteAccountOJConfig> map = new Gson().fromJson(new FileReader(jsonConfig), type);
+        HashMap<RemoteOj, RemoteAccountOJConfig> map = new Gson().fromJson(jsonConfigStr, type);
         if (map.containsKey(null)) {
             log.error("Remote OJ account config contains unknown OJ name");
             System.exit(-1);
